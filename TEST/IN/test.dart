@@ -1,23 +1,22 @@
 // -- CONVERTED
 
-import { foo } from "./foo";
-import { bar } from "../utils/bar";
+import 'foo.dart';
+import '../foo/bar.dart';
 
-void main(
-    )
+void main()
 {
     print( 'Hello, ' + 'World!' );
 
-    var concatenated_text = 'start' + "end";
-    var other_concatenated_text = "start" + 'end';
-    var folder_path_list = [ './foo', '../foo/bar' ];
+    var concatenated_text = '"start"' + "'middle'" + '"end"';
+    var folder_path_array = [ './foo', '../foo/bar' ];
     var message = 'foo bar baz';
     var empty_string = '';
     var yes_literal = 'yes';
+    var escaped_character = '"\"\'\""';
+    var escaped_file_path = '.\\foo\\bar.txt';
 }
 
 // -- IGNORED
 
-var escaped_character = '\'';
-var escaped_file_path = '.\\foo\\bar.txt';
-var double_quoted_text = "unchanged";
+var double_quoted_text = "'unchanged'";
+var interpolated_text = "a${'b'}";

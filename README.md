@@ -2,13 +2,13 @@
 
 # Requote
 
-Simple quote converter.
+Quote converter.
 
 ## Installation
 
 Install the [DMD 2 compiler](https://dlang.org/download.html) (using the MinGW setup option on Windows).
 
-Build the executable with the following command line :
+Build the executable with the following command :
 
 ```bash
 dmd -m64 requote.d
@@ -29,17 +29,17 @@ requote --double <file extension> <input folder path> <output folder path>
 requote --single .js FOLDER/
 ```
 
-Converts double-quoted string literals into single-quoted string literals.
+Converts double-quoted string literals to single-quoted string literals.
 
 ```bash
-requote --double .ts INPUT_FOLDER/ OUTPUT_FOLDER/
+requote --double .dart INPUT_FOLDER/ OUTPUT_FOLDER/
 ```
 
-Converts single-quoted string literals into double-quoted string literals.
+Converts single-quoted string literals to double-quoted string literals.
 
 ## Limitations
 
-- There is no tokenization phase, so only safe cases involving single-line string literals are handled.
+Since no tokenization or parsing is performed, only single-line Dart and JavaScript string literals without interpolation are handled.
 
 ## Version
 
@@ -47,7 +47,7 @@ Converts single-quoted string literals into double-quoted string literals.
 
 ## Author
 
-Eric Pelzer (ecstatic.coder@gmail.com).
+Eric Pelzer (ecstatic.coder@gmail.com)
 
 ## License
 

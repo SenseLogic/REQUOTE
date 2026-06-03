@@ -174,51 +174,59 @@ string ReadText(
 // ~~
 
 bool CanRequoteLine(
-    string line,
-    long last_single_quote_character_index,
-    char new_quote_character
+    string line
     )
 {
-    bool
-        is_inside_string_literal;
     long
-        backslash_character_index,
         character_index;
     char
-        character;
+        character,
+        quote_character;
 
-    backslash_character_index = line.indexOf( '\\' );
+    quote_character = 0;
 
-    if ( backslash_character_index >= 0
-         && backslash_character_index < last_single_quote_character_index )
+    for ( character_index = 0;
+          character_index < line.length;
+          ++character_index )
     {
-        return false;
-    }
-    else
-    {
-        is_inside_string_literal = false;
+        character = line[ character_index ];
 
-        for ( character_index = 0;
-              character_index < last_single_quote_character_index;
-              ++character_index )
+        if ( quote_character != 0 )
         {
-            character = line[ character_index ];
-
-            if ( character == '\''
-                 || character == '"'
-                 || character == '`' )
+            if ( character == quote_character )
             {
-                is_inside_string_literal = !is_inside_string_literal;
+                quote_character = 0;
             }
-            else if ( character == '/'
-                      && !is_inside_string_literal )
+            else if ( character == '\\' )
+            {
+                ++character_index;
+
+                if ( character_index < line.length
+                     && line[ character_index ] == '(' )
+                {
+                    return false;
+                }
+            }
+            else if ( character == '$'
+                      || character == '{'
+                      || character == '}' )
             {
                 return false;
             }
         }
-
-        return true;
+        else if ( character == '\''
+                  || character == '"'
+                  || character == '`' )
+        {
+            quote_character = character;
+        }
+        else if ( character == '/' )
+        {
+            return false;
+        }
     }
+
+    return quote_character == 0;
 }
 
 // ~~
@@ -230,8 +238,6 @@ void RequoteFile(
     char new_quote_character
     )
 {
-    bool
-        character_is_converted;
     char
         character,
         quote_character;
@@ -239,17 +245,18 @@ void RequoteFile(
         character_array;
     long
         character_index,
-        first_single_quote_character_index,
-        last_single_quote_character_index,
+        first_old_quote_character_index,
+        last_old_quote_character_index,
         line_index;
     string
         file_text,
-        line;
+        line,
+        requoted_file_text;
     string[]
         line_array;
 
-    file_text = input_file_path.ReadText().replace( "\r", "" );
-    line_array = file_text.split( "\n" );
+    file_text = input_file_path.ReadText();
+    line_array = file_text.replace( "\r", "" ).split( "\n" );
 
     for ( line_index = 0;
           line_index < line_array.length;
@@ -257,31 +264,57 @@ void RequoteFile(
     {
         line = line_array[ line_index ];
 
-        first_single_quote_character_index = line.indexOf( old_quote_character );
-        last_single_quote_character_index = line.lastIndexOf( old_quote_character );
+        first_old_quote_character_index = line.indexOf( old_quote_character );
+        last_old_quote_character_index = line.lastIndexOf( old_quote_character );
 
-        if ( first_single_quote_character_index >= 0
-             && last_single_quote_character_index > first_single_quote_character_index
-             && line.CanRequoteLine( last_single_quote_character_index, new_quote_character ) )
+        if ( first_old_quote_character_index >= 0
+             && first_old_quote_character_index < last_old_quote_character_index
+             && line.CanRequoteLine() )
         {
             character_array = line.to!(char[])();
             quote_character = 0;
 
             for ( character_index = 0;
-                  character_index <= last_single_quote_character_index;
+                  character_index < character_array.length;
                   ++character_index )
             {
                 character = character_array[ character_index ];
-                character_is_converted = false;
 
                 if ( quote_character != 0 )
                 {
-                    character_is_converted = false;
-
                     if ( character == quote_character )
                     {
+                        if ( quote_character == old_quote_character )
+                        {
+                            character_array[ character_index ] = new_quote_character;
+                        }
+
                         quote_character = 0;
-                        character_is_converted = true;
+                    }
+                    else if ( character == '\\' )
+                    {
+                        if ( quote_character == old_quote_character
+                             && character_index + 1 < character_array.length
+                             && character_array[ character_index + 1 ] == old_quote_character )
+                        {
+                            character_array
+                                = character_array[ 0 .. character_index ]
+                                  ~ character_array[ character_index + 1 .. $ ];
+                        }
+                        else
+                        {
+                            ++character_index;
+                        }
+                    }
+                    else if ( quote_character == old_quote_character
+                              && character == new_quote_character )
+                    {
+                        character_array
+                            = character_array[ 0 .. character_index ]
+                              ~ '\\'
+                              ~ character_array[ character_index .. $ ];
+
+                        ++character_index;
                     }
                 }
                 else if ( character == '\''
@@ -289,13 +322,11 @@ void RequoteFile(
                           || character == '`' )
                 {
                     quote_character = character;
-                    character_is_converted = true;
-                }
 
-                if ( character_is_converted
-                     && character == old_quote_character )
-                {
-                    character_array[ character_index ] = new_quote_character;
+                    if ( quote_character == old_quote_character )
+                    {
+                        character_array[ character_index ] = new_quote_character;
+                    }
                 }
             }
 
@@ -303,8 +334,12 @@ void RequoteFile(
         }
     }
 
-    file_text = line_array.join( "\n" );
-    output_file_path.WriteText( file_text );
+    requoted_file_text = line_array.join( "\n" );
+
+    if ( requoted_file_text != file_text )
+    {
+        output_file_path.WriteText( requoted_file_text );
+    }
 }
 
 // ~~
@@ -373,10 +408,10 @@ int main(
     else
     {
         writeln( "Usage :" );
-        writeln( "    requote --single FOLDER/" );
-        writeln( "    requote --single INPUT_FOLDER/ OUTPUT_FOLDER/" );
-        writeln( "    requote --double FOLDER/" );
-        writeln( "    requote --double INPUT_FOLDER/ OUTPUT_FOLDER/" );
+        writeln( "    requote --single <file extension> <folder path>" );
+        writeln( "    requote --single <file extension> <input folder path> <output folder path>" );
+        writeln( "    requote --double <file extension> <folder path>" );
+        writeln( "    requote --double <file extension> <input folder path> <output folder path>" );
 
         PrintError( "Invalid arguments : " ~ argument_array.to!string() );
     }
