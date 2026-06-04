@@ -21,6 +21,7 @@
 // -- IMPORTS
 
 import core.stdc.stdlib : exit;
+import std.algorithm : canFind;
 import std.conv : to;
 import std.file : dirEntries, exists, isFile, mkdirRecurse, readText, write, SpanMode;
 import std.path : absolutePath;
@@ -102,6 +103,79 @@ string GetFolderPath(
     {
         return "";
     }
+}
+
+// ~~
+
+bool IsFolderPath(
+    string folder_path
+    )
+{
+    return
+        folder_path == ""
+        || folder_path.GetLogicalPath().endsWith( '/' );
+}
+
+// ~~
+
+string GetFileName(
+    string file_path
+    )
+{
+    long
+        slash_character_index;
+
+    slash_character_index = file_path.lastIndexOf( '/' );
+
+    if ( slash_character_index >= 0 )
+    {
+        return file_path[ slash_character_index + 1 .. $ ];
+    }
+    else
+    {
+        return file_path;
+    }
+}
+
+// ~~
+
+string GetFileExtension(
+    string file_path
+    )
+{
+    long
+        dot_character_index;
+    string
+        file_name;
+
+    file_name = GetFileName( file_path );
+    dot_character_index = file_name.lastIndexOf( '.' );
+
+    if ( dot_character_index >= 0 )
+    {
+        return file_name[ dot_character_index .. $ ];
+    }
+    else
+    {
+        return "";
+    }
+}
+
+// ~~
+
+bool IsFileExtensionArray(
+    string[] file_extension_array
+    )
+{
+    foreach ( file_extension; file_extension_array )
+    {
+        if ( !file_extension.startsWith( '.' ) )
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // ~~
@@ -249,14 +323,14 @@ void RequoteFile(
         last_old_quote_character_index,
         line_index;
     string
-        file_text,
+        input_file_text,
         line,
-        requoted_file_text;
+        output_file_text;
     string[]
         line_array;
 
-    file_text = input_file_path.ReadText();
-    line_array = file_text.replace( "\r", "" ).split( "\n" );
+    input_file_text = input_file_path.ReadText();
+    line_array = input_file_text.replace( "\r", "" ).split( "\n" );
 
     for ( line_index = 0;
           line_index < line_array.length;
@@ -334,11 +408,11 @@ void RequoteFile(
         }
     }
 
-    requoted_file_text = line_array.join( "\n" );
+    output_file_text = line_array.join( "\n" );
 
-    if ( requoted_file_text != file_text )
+    if ( output_file_text != input_file_text )
     {
-        output_file_path.WriteText( requoted_file_text );
+        output_file_path.WriteText( output_file_text );
     }
 }
 
@@ -347,12 +421,13 @@ void RequoteFile(
 void RequoteFiles(
     string input_folder_path,
     string output_folder_path,
-    string file_extension,
+    string[] file_extension_array,
     char old_quote_character,
     char new_quote_character,
     )
 {
     string
+        input_file_extension,
         input_file_path,
         output_file_path;
 
@@ -363,9 +438,10 @@ void RequoteFiles(
         if ( input_folder_entry.isFile )
         {
             input_file_path = input_folder_entry.name.GetLogicalPath();
+            input_file_extension = input_file_path.GetFileExtension();
 
-            if ( input_file_path.endsWith( file_extension )
-                 && input_file_path.startsWith( input_folder_path ) )
+            if ( input_file_path.startsWith( input_folder_path )
+                 && file_extension_array.canFind( input_file_extension ) )
             {
                 output_file_path = output_folder_path ~ input_file_path[ input_folder_path.length .. $ ];
 
@@ -388,19 +464,17 @@ int main(
 {
     argument_array = argument_array[ 1 .. $ ];
 
-    if ( argument_array.length >= 3
-         && argument_array.length <= 4
+    if ( argument_array.length >= 4
          && ( argument_array[ 0 ] == "--single"
               || argument_array[ 0 ] == "--double" )
-         && argument_array[ 1 ].GetLogicalPath().startsWith( '.' )
-         && argument_array[ 2 ].GetLogicalPath().endsWith( '/' )
-         && ( argument_array.length == 3
-              || argument_array[ 3 ].GetLogicalPath().endsWith( '/' ) ) )
+         && argument_array[ 1 ].IsFolderPath()
+         && argument_array[ 2 ].IsFolderPath()
+         && argument_array[ 3 .. $ ].IsFileExtensionArray() )
     {
         RequoteFiles(
+            argument_array[ 1 ].GetLogicalPath(),
             argument_array[ 2 ].GetLogicalPath(),
-            argument_array[ argument_array.length == 3 ? 2 : 3 ].GetLogicalPath(),
-            argument_array[ 1 ],
+            argument_array[ 3 .. $ ],
             argument_array[ 0 ] == "--single" ? '"' : '\'',
             argument_array[ 0 ] == "--single" ? '\'' : '"'
             );
@@ -408,10 +482,8 @@ int main(
     else
     {
         writeln( "Usage :" );
-        writeln( "    requote --single <file extension> <folder path>" );
-        writeln( "    requote --single <file extension> <input folder path> <output folder path>" );
-        writeln( "    requote --double <file extension> <folder path>" );
-        writeln( "    requote --double <file extension> <input folder path> <output folder path>" );
+        writeln( "    requote --single <input folder path> <output folder path> <file extension> [<file extension> ...]" );
+        writeln( "    requote --double <input folder path> <output folder path> <file extension> [<file extension> ...]" );
 
         PrintError( "Invalid arguments : " ~ argument_array.to!string() );
     }

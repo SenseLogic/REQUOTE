@@ -7,6 +7,7 @@ void main()
 {
     print( "Hello, " + "World!" );
 
+    var quoted_text = "'quoted'";
     var concatenated_text = "\"start\"" + "'middle'" + "\"end\"";
     var folder_path_array = [ "./foo", "../foo/bar" ];
     var message = "foo bar baz";
@@ -18,5 +19,4 @@ void main()
 
 // -- IGNORED
 
-var double_quoted_text = "'unchanged'";
 var interpolated_text = "a${'b'}";

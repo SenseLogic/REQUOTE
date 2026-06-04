@@ -17,22 +17,20 @@ dmd -m64 requote.d
 ## Command line
 
 ```
-requote --single <file extension> <folder path>
-requote --single <file extension> <input folder path> <output folder path>
-requote --double <file extension> <folder path>
-requote --double <file extension> <input folder path> <output folder path>
+requote --single <input folder path> <output folder path> <file extension> [<file extension> ...]
+requote --double <input folder path> <output folder path> <file extension> [<file extension> ...]
 ```
 
 ### Example
 
 ```bash
-requote --single .js FOLDER/
+requote --single INPUT_FOLDER/ OUTPUT_FOLDER/ *.dart
 ```
 
 Converts double-quoted string literals to single-quoted string literals.
 
 ```bash
-requote --double .dart INPUT_FOLDER/ OUTPUT_FOLDER/
+requote --double INPUT_FOLDER/ OUTPUT_FOLDER/ *.js *.ts
 ```
 
 Converts single-quoted string literals to double-quoted string literals.
@@ -43,7 +41,7 @@ Since no tokenization or parsing is performed, only single-line Dart and JavaScr
 
 ## Version
 
-0.1
+0.2
 
 ## Author
 

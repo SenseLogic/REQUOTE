@@ -1,2 +1,4 @@
-..\requote.exe --double .dart IN/ OUT/
-..\requote.exe --double .js IN/ OUT/
+..\requote.exe --double IN/ OUT/DOUBLE/ .dart
+..\requote.exe --double IN/ OUT/DOUBLE/ .js
+..\requote.exe --single OUT/DOUBLE/ OUT/SINGLE/ .dart
+..\requote.exe --single OUT/DOUBLE/ OUT/SINGLE/ .js
