@@ -247,7 +247,7 @@ string ReadText(
 
 // ~~
 
-bool CanRequoteLine(
+bool CanProcessLine(
     string line
     )
 {
@@ -305,7 +305,7 @@ bool CanRequoteLine(
 
 // ~~
 
-void RequoteFile(
+void ProcessFile(
     string input_file_path,
     string output_file_path,
     char old_quote_character,
@@ -343,7 +343,7 @@ void RequoteFile(
 
         if ( first_old_quote_character_index >= 0
              && first_old_quote_character_index < last_old_quote_character_index
-             && line.CanRequoteLine() )
+             && line.CanProcessLine() )
         {
             character_array = line.to!(char[])();
             quote_character = 0;
@@ -418,7 +418,7 @@ void RequoteFile(
 
 // ~~
 
-void RequoteFiles(
+void ProcessFiles(
     string input_folder_path,
     string output_folder_path,
     string[] file_extension_array,
@@ -445,7 +445,7 @@ void RequoteFiles(
             {
                 output_file_path = output_folder_path ~ input_file_path[ input_folder_path.length .. $ ];
 
-                RequoteFile(
+                ProcessFile(
                     input_file_path,
                     output_file_path,
                     old_quote_character,
@@ -471,7 +471,7 @@ int main(
          && argument_array[ 2 ].IsFolderPath()
          && argument_array[ 3 .. $ ].IsFileExtensionArray() )
     {
-        RequoteFiles(
+        ProcessFiles(
             argument_array[ 1 ].GetLogicalPath(),
             argument_array[ 2 ].GetLogicalPath(),
             argument_array[ 3 .. $ ],
